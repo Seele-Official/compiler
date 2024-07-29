@@ -1,0 +1,31 @@
+<program> ::= <declaration-list>
+
+<declaration-list> ::= <declaration> | <declaration> <declaration-list>
+
+<declaration> ::= <variable-declaration> | <function-declaration>
+
+<variable-declaration> ::= <type-specifier> <declarator> ";" | <type-specifier> <init_declarator> ";"
+
+<declarator> ::= <identifier>
+                | <identifier> "[" <constant> "]"
+
+<init_declarator> ::= <identifier> "=" <expression>
+                | <identifier> "[" <constant>? "]" "=" <string>
+                | <identifier> "[" <constant> "]" "=" <expression_list>
+
+
+<expression_list> ::= "{" <expression> "}"
+
+<type-specifier> ::= <type> | <pointer> <type>
+
+<type> ::= "int" | "void" | "char" 
+
+<pointer> ::= "*" | "*" <pointer>
+
+<function-declaration> ::= <type-specifier> <identifier> "(" <parameter-list> ")" <compound-statement>
+
+<parameter-list> ::= <parameter> | <parameter> "," <parameter-list>
+
+<parameter> ::= <type-specifier> <identifier>
+
+

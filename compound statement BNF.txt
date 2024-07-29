@@ -1,0 +1,21 @@
+<compound-statement> ::= "{" <statement-list> "}"
+
+
+
+<statement-list> ::= <statement> | <statement> <statement-list> | ε
+
+<statement> ::= <expression-statement> | <compound-statement> | <selection-statement> | <iteration-statement> | <jump-statement> | <variable-declaration>
+
+<expression-statement> ::= <expression> ";" | ";"
+
+<selection-statement> ::= "if" "(" <expression> ")" <statement> | "if" "(" <expression> ")" <statement> "else" <statement>
+
+<iteration-statement> ::= "while" "(" <expression> ")" <statement> | "for" "(" (<expression-statement> | <variable-declaration>) <expression> ";" <expression> ")" <statement>
+
+<jump-statement> ::= <return-statement> | <break-statement> | <continue-statement>
+
+<continue-statement> ::= "continue" ';'
+
+<return-statement> ::= "return" <expression-statement>
+
+<break-statement> ::= "break" ';'
