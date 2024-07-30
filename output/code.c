@@ -1,10 +1,11 @@
+
 int add(int a, int b){
     return a + b;
 }
 int mul(int a, int b){
     return a * b;
 }
-int stradd(char *a, char *b){
+char* stradd(char *a, char *b){
     int alen = 0;
     int blen = 0;
     while (1)
@@ -26,6 +27,7 @@ int stradd(char *a, char *b){
     char *res = malloc(alen + blen + 1);
     for (int i = 0; i < alen; i++)
     {
+        int alen;
         res[i] = a[i];
     }
     for (int i = 0; i < blen; i++)
@@ -33,7 +35,7 @@ int stradd(char *a, char *b){
         res[alen + i] = b[i];
     }
     res[alen + blen] = '\0';
-    
+    return res;
 }
 
 int cmpStrLen(char *a, char *b){
@@ -77,5 +79,6 @@ int main(){
     char str1[7] = "Hello, ";
     char str2[7] = "World!";
     char *str3 = stradd(str1, str2);
+    int cmp = cmpStrLen(str1, str2);
     return 0;
 }

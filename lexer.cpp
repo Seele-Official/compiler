@@ -135,6 +135,7 @@ class TOKEN{
                 throw std::invalid_argument("Invalid token");
             }
         }
+
         TOKEN(const TOKEN &t){
             this->type = t.type;
             this->kValue = t.kValue;
@@ -142,24 +143,14 @@ class TOKEN{
             this->sValue = t.sValue;
             this->Value = t.Value;
         }
+
+
         TOKEN(){
             this->type = TOKEN_TYPE::NONE;
         }
 
 
-        template<typename T>
-        T getValue(){
-            if(type == TOKEN_TYPE::KEYWORDS){
-                return (T)kValue;
-            }
-            if(type == TOKEN_TYPE::OPERATORS){
-                return (T)oValue;
-            }
-            if(type == TOKEN_TYPE::SEPARATORS){
-                return (T)sValue;
-            }
-            return (T)Value;
-        }
+
 
         bool operator==(const TOKEN &t){
             if(this->type != t.type){
@@ -216,13 +207,13 @@ class TOKEN{
 };
 
 
-List::list<TOKEN> *tokenLizer(const String::string &code){
-    List::list<TOKEN> *tokens = new List::list<TOKEN>();
+List::list<TOKEN> tokenLizer(const String::string &code){
+    List::list<TOKEN> tokens;
     String::string tempStr((size_t)100);
     for (size_t i = 0; i < code.getLength(); i++) {
         if (code[i] == ' ' || code[i] == '\n' || code[i] == '\t') {
             if (tempStr.isEmpty() == false) {
-                tokens->push_back(tempStr);
+                tokens.push_back(tempStr);
                 tempStr.clear();
             }
             continue;
@@ -230,16 +221,16 @@ List::list<TOKEN> *tokenLizer(const String::string &code){
         
         if (size_t index = SEPARATORS_LIST.find(code[i]); index != -1) {
             if (tempStr.isEmpty() == false) {
-                tokens->push_back(tempStr);
+                tokens.push_back(tempStr);
                 tempStr.clear();
             }
-            tokens->push_back(code.slice(i, i+1));
+            tokens.push_back(code.slice(i, i+1));
             continue;
         }
 
         if (code[i] == '"') {
             if (tempStr.isEmpty() == false) {
-                tokens->push_back(tempStr);
+                tokens.push_back(tempStr);
                 tempStr.clear();
             }
             size_t j = i;
@@ -249,7 +240,7 @@ List::list<TOKEN> *tokenLizer(const String::string &code){
                 j++;
             }
             tempStr.push_back(code[j]);
-            tokens->push_back(tempStr);
+            tokens.push_back(tempStr);
             tempStr.clear();
             i = j;
             continue;
@@ -260,33 +251,33 @@ List::list<TOKEN> *tokenLizer(const String::string &code){
             if (size_t index2 = OPERATORS_LIST.find(code.slice(i, i+2)); index2 != -1) {
                 if (size_t index3 = OPERATORS_LIST.find(code.slice(i, i+3)); index3 != -1) {
                     if (tempStr.isEmpty() == false) {
-                        tokens->push_back(tempStr);
+                        tokens.push_back(tempStr);
                         tempStr.clear();
                     }
-                    tokens->push_back(code.slice(i, i+3));
+                    tokens.push_back(code.slice(i, i+3));
                     i += 2;
                     continue;
                 }
                 if (tempStr.isEmpty() == false) {
-                    tokens->push_back(tempStr);
+                    tokens.push_back(tempStr);
                     tempStr.clear();
                 }
-                tokens->push_back(code.slice(i, i+2));
+                tokens.push_back(code.slice(i, i+2));
                 i++;
                 continue;
             }
             if (tempStr.isEmpty() == false) {
-                tokens->push_back(tempStr);
+                tokens.push_back(tempStr);
                 tempStr.clear();
             }
-            tokens->push_back(code.slice(i, i+1));
+            tokens.push_back(code.slice(i, i+1));
             continue;
         }
         tempStr.push_back(code[i]);
     }
     
     if (tempStr.isEmpty() == false) {
-        tokens->push_back(tempStr);
+        tokens.push_back(tempStr);
     }
     return tokens;
 }

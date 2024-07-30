@@ -1,6 +1,6 @@
 #ifndef STRING_H
 #define STRING_H
-
+#include <utility>
 #include <iostream>
 #include <stdexcept>
 
@@ -18,12 +18,14 @@ namespace String {
         string(const char ch);
         string(const char *str);
         string(const string &str);
+        string(string &&other);
         ~string();
 
         size_t getLength() const;
         char operator[](size_t index) const;
         void operator=(const char *str);
         void operator=(const string &str);
+        string& operator=(string &&other);
 
         bool operator==(const string &str) const;
         bool operator==(const char *str) const;

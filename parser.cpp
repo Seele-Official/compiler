@@ -132,7 +132,10 @@ public:
     }
     
     NODE_TYPE getType(){
-        return type;
+        return this->type;
+    }
+    TOKEN getToken(){
+        return token;
     }
     size_t getChildrenLength(){
         return children.getLength();
@@ -175,10 +178,10 @@ Node::~Node()
 class Parser
 {
 private:
-    List::list<TOKEN> *tokens;
+    List::list<TOKEN> tokens;
     TOKEN getCurrentToken(){
         try{
-            return (*tokens)[0];
+            return tokens[0];
         } catch (std::out_of_range e){
             std::cout << "No more tokens" << std::endl;
             return TOKEN();
@@ -186,7 +189,7 @@ private:
     }
     TOKEN getNextToken(){
         try{
-            return (*tokens)[1];
+            return tokens[1];
         } catch (std::out_of_range e){
             std::cout << "No more tokens" << std::endl;
             return TOKEN();
@@ -194,14 +197,14 @@ private:
     }
     TOKEN getNextNextToken(){
         try{
-            return (*tokens)[2];
+            return tokens[2];
         } catch (std::out_of_range e){
             std::cout << "No more tokens" << std::endl;
             return TOKEN();
         }
     }
     void consumeToken(){
-        tokens->pop_front();
+        tokens.pop_front();
     }
     Node* parsePrimaryExpression();
     Node* parsePostfixExpression();
@@ -234,7 +237,7 @@ private:
     Node* parseProgram();
 
 public:
-    Parser(List::list<TOKEN> *tokens);
+    Parser(List::list<TOKEN> &&tokens);
     ~Parser();
     Node* parse();
 };
@@ -636,6 +639,7 @@ Node* Parser::parseTypeSpecifier(){
     }else{
         std::runtime_error("Expected type specifier");
     }
+    return;
 }
 Node* Parser::parseVariableDeclaration(){
     Node* typeSpecifierNode = parseTypeSpecifier();
@@ -745,6 +749,7 @@ Node* Parser::parseStatement(){
     }else{
         return parseExpressionStatement();
     }
+    return;
 }
 
 Node* Parser::parseParameterList(){
@@ -828,7 +833,7 @@ Node* Parser::parseFunctionDeclaration(){
 
 Node* Parser::parseProgram(){
     Node* programNode = new Node(NODE_TYPE::PROGRAM);
-    while (tokens->getLength() > 0)
+    while (tokens.getLength() > 0)
     {
         Node* functionDeclarationNode = parseFunctionDeclaration();
         programNode->addChild(functionDeclarationNode);
@@ -840,9 +845,9 @@ Node* Parser::parse(){
     return Node;
 }
 
-Parser::Parser(List::list<TOKEN> *tokens)
+Parser::Parser(List::list<TOKEN> &&tokens)
 {
-    this->tokens = tokens;
+    this->tokens = std::move(tokens);
 }
 
 Parser::~Parser()

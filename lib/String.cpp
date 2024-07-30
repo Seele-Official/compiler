@@ -50,6 +50,24 @@ namespace String{
         }
     }
     
+    string& string::operator=(string &&other){
+        if(this == &other){
+            return *this;
+        }
+        if (this->str != nullptr)
+        {
+            delete[] this->str;
+        }
+        this->str = other.str;
+        this->length = other.length;
+        this->realLength = other.realLength;
+        other.str = nullptr;
+        other.length = 0;
+        other.realLength = 0;
+        return *this;
+    }
+
+
     bool string::operator==(const string &str) const
     {
         if (this->length != str.getLength())
@@ -96,6 +114,8 @@ namespace String{
     
     std::ostream &operator<<(std::ostream &os,const string &str)
     {
+
+        // os << "adress:" << static_cast<void*>(str.str) << " values:";
         for (size_t i = 0; i < str.getLength(); i++)
         {
             os << str[i];
@@ -224,6 +244,9 @@ namespace String{
     }
     string::string(const string &str) : string(){
         *this = str;
+    }
+    string::string(string &&other) : string(){
+        *this = std::move(other);
     }
     string::~string()
     {
