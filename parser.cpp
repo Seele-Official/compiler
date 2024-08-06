@@ -639,7 +639,6 @@ Node* Parser::parseTypeSpecifier(){
     }else{
         std::runtime_error("Expected type specifier");
     }
-    return;
 }
 Node* Parser::parseVariableDeclaration(){
     Node* typeSpecifierNode = parseTypeSpecifier();
@@ -749,7 +748,6 @@ Node* Parser::parseStatement(){
     }else{
         return parseExpressionStatement();
     }
-    return;
 }
 
 Node* Parser::parseParameterList(){

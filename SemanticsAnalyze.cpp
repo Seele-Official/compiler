@@ -5,11 +5,35 @@ enum class SymbolType{
     VARIABLE,
     FUNCTION
 };
-enum class ValueType{
-    INT,
-    CHAR,
-    VOID,
-    POINTER
+
+class ValueType{
+    public:
+        enum class Type{
+            INT,
+            CHAR,
+            VOID
+        };
+        Type type;
+        uint8_t pointLevel;
+        ValueType(Type type, uint8_t pointLevel = 0){
+            this->type = type;
+            this->pointLevel = pointLevel;
+        }
+        ValueType(){
+            this->type = Type::INT;
+            this->pointLevel = 0;
+        }
+        ValueType& operator=(const ValueType &other){
+            this->type = other.type;
+            this->pointLevel = other.pointLevel;
+            return *this;
+        }
+        bool operator==(const ValueType &other){
+            return this->type == other.type && this->pointLevel == other.pointLevel;
+        }
+        bool operator!=(const ValueType &other){
+            return this->type != other.type || this->pointLevel != other.pointLevel;
+        }
 };
 std::ostream &operator<<(std::ostream &os, SymbolType &s){
     switch (s)
@@ -26,86 +50,86 @@ std::ostream &operator<<(std::ostream &os, SymbolType &s){
     return os;
 }
 std::ostream &operator<<(std::ostream &os, ValueType &v){
-    switch (v)
-    {
-    case ValueType::INT:
-        os << "int";
-        break;
-    case ValueType::CHAR:
-        os << "char";
-        break;
-    case ValueType::VOID:
-        os << "void";
-        break;
-    case ValueType::POINTER:
-        os << "pointer";
-        break;
-    default:
-        break;
+    switch (v.type){
+        case ValueType::Type::INT:
+            os << "int";
+            break;
+        case ValueType::Type::CHAR:
+            os << "char";
+            break;
+        case ValueType::Type::VOID:
+            os << "void";
+            break;
+        default:
+            break;
+    }
+    for (uint8_t i = 0; i < v.pointLevel; i++){
+        os << "*";
     }
     return os;
 }
 class Symbol{
     private:
-        SymbolType type;
+        SymbolType symbolType;
+        ValueType valueType; //return type for function or value type for variable
         String::string name;
-        ValueType valueType;
-        //return type for function or value type for variable
 
         List::list<ValueType> parameters;
     public:
         Symbol(){
-
         }
         Symbol(Symbol &&other){
-            this->type = other.type;
+            this->symbolType = other.symbolType;
             this->name = std::move(other.name);
             this->valueType = other.valueType;
-            if (other.type == SymbolType::FUNCTION){
+            if (other.symbolType == SymbolType::FUNCTION){
                 this->parameters = std::move(other.parameters);
             }
         }
         Symbol(Symbol &other){
-            this->type = other.type;
+            this->symbolType = other.symbolType;
             this->name = other.name;
             this->valueType = other.valueType;
-            if (other.type == SymbolType::FUNCTION){
+            if (other.symbolType == SymbolType::FUNCTION){
                 this->parameters = other.parameters;
             }
         }
 
-
-        Symbol(SymbolType type, String::string &name, ValueType valueType){
-            this->type = type;
+        Symbol(SymbolType type, ValueType valueType, String::string &name){
+            this->symbolType = type;
             this->name = std::move(name);
             this->valueType = valueType;
         }
-        Symbol(SymbolType type, String::string &name, ValueType valueType, List::list<ValueType> &parameters){
-            this->type = type;
+        Symbol(SymbolType type, ValueType valueType, String::string &name, List::list<ValueType> &parameters){
+            this->symbolType = type;
             this->name = std::move(name);
             this->valueType = valueType;
             this->parameters = std::move(parameters);
         }
         SymbolType getType(){
-            return this->type;
-        }
-        String::string getName(){
-            return this->name;
+            return this->symbolType;
         }
         ValueType getValueType(){
             return this->valueType;
         }
+        String::string getName(){
+            return this->name;
+        }
+        
         List::list<ValueType> getParameters(){
             return this->parameters;
         }
         bool operator==(const Symbol &s){
             return this->name == s.name;
         }
+        bool operator!=(const Symbol &s){
+            return this->name != s.name;
+        }
         void operator=(const Symbol &other){
-            this->type = other.type;
+            this->symbolType = other.symbolType;
             this->name = other.name;
             this->valueType = other.valueType;
-            if (other.type == SymbolType::FUNCTION){
+            if (other.symbolType == SymbolType::FUNCTION){
                 this->parameters = other.parameters;
             }
         }
@@ -113,10 +137,10 @@ class Symbol{
             if (this == &other){
                 return *this;
             }
-            this->type = other.type;
+            this->symbolType = other.symbolType;
             this->name = std::move(other.name);
             this->valueType = other.valueType;
-            if (other.type == SymbolType::FUNCTION){
+            if (other.symbolType == SymbolType::FUNCTION){
                 this->parameters = std::move(other.parameters);
             }
             return *this;
@@ -125,8 +149,8 @@ class Symbol{
 
 
         friend std::ostream &operator<<(std::ostream &os, Symbol &s){
-            os << "Symbol(" << s.type << ", " << s.valueType << ", " << s.name;
-            if (s.type == SymbolType::FUNCTION){
+            os << "Symbol(" << s.symbolType << ", " << s.valueType << ", " << s.name;
+            if (s.symbolType == SymbolType::FUNCTION){
                 os << ", parameters: " << s.parameters;
             }
             os << ")";
@@ -224,32 +248,45 @@ class SemanticAnalyzer{
             return;
         }
         ValueType analyzeType(Node *node){
-            if (node->getType() == NODE_TYPE::POINTER){
-                return ValueType::POINTER;
-            }else{
-                switch (node->getToken().kValue)
+            auto func = [](KEYWORDS keyword){
+                switch (keyword)
                 {
                 case KEYWORDS::INT:
-                    return ValueType::INT;
+                    return ValueType::Type::INT;
                     break;
                 case KEYWORDS::CHAR:
-                    return ValueType::CHAR;
+                    return ValueType::Type::CHAR;
                     break;
                 case KEYWORDS::VOID:
-                    return ValueType::VOID;
+                    return ValueType::Type::VOID;
                     break;
                 default:
                     break;
                 }
+            };
+
+            if (node->getType() == NODE_TYPE::POINTER){
+                uint8_t level = 0;
+                while (node->getType() == NODE_TYPE::POINTER){
+                    level++;
+                    node = node->getChild(0);
+                }
+                return ValueType(func(node->getToken().kValue), level);
+            }else{
+                return ValueType(func(node->getToken().kValue));
             }
-            return;
         }
         String::string analyzeIdentifier(Node *identifierNode){
+            if (identifierNode->getType() == NODE_TYPE::ARRAY){
+                return identifierNode->getChild(0)->getToken().Value;
+            }
             return identifierNode->getToken().Value;
         }
         ValueType analyzeOperator(Node *node){
             ValueType left, right;
-            if (node->getToken().oValue != OPERATORS::INCREMENT && node->getToken().oValue != OPERATORS::DECREMENT){
+            OPERATORS op = node->getToken().oValue;
+
+            if (op != OPERATORS::INCREMENT && op != OPERATORS::DECREMENT){
                 left = this->analyzeExpression(node->getChild(0));
                 right = this->analyzeExpression(node->getChild(1));
                 if (left == right){
@@ -262,13 +299,14 @@ class SemanticAnalyzer{
             }
 
         }
+        // 保证表达式的类型一致
         ValueType analyzeExpression(Node *node){
             switch (node->getType()){
                 case NODE_TYPE::CONSTANT:
-                    return ValueType::INT;
+                    return ValueType::Type::INT;
                     break;
                 case NODE_TYPE::STRING_LITERAL:
-                    return ValueType::CHAR;
+                    return ValueType(ValueType::Type::CHAR, 1);
                     break;
                 case NODE_TYPE::IDENTIFIER:
                     return this->localTable.findSymbol(node->getToken().Value).getValueType();
@@ -279,6 +317,9 @@ class SemanticAnalyzer{
                 case NODE_TYPE::OPERATOR:
                     return this->analyzeOperator(node);
                     break;
+                case NODE_TYPE::EXPRESSION:
+                    return this->analyzeExpression(node->getChild(0));
+                    break;
                 default:
                     break;
             }
@@ -287,17 +328,26 @@ class SemanticAnalyzer{
         Symbol analyzeVariableDeclaration(Node *node){
             Node *type;
             Node *identifier;
+            ValueType valueType;
             if (node->getChildrenLength() == 2){
                 type = node->getChild(0);
                 identifier = node->getChild(1);
+                valueType = this->analyzeType(type);
             }else{
-                this->analyzeExpression(node->getChild(0));
+                ValueType exprtype = this->analyzeExpression(node->getChild(0));
                 type = node->getChild(1);
                 identifier = node->getChild(2);
+                valueType = this->analyzeType(type);
+                if (exprtype != valueType){
+                    throw std::invalid_argument("Type mismatch");
+                }
             }
-            ValueType valueType = this->analyzeType(type);
+            if (valueType == ValueType::Type::VOID){
+                throw std::invalid_argument("Void variable");
+            }
+            
             String::string name = this->analyzeIdentifier(identifier);
-            Symbol symbol(SymbolType::VARIABLE, name, valueType);
+            Symbol symbol(SymbolType::VARIABLE, valueType, name);
             return symbol;
         }
         void analyzeCompoundStatement(Node *node){
@@ -307,6 +357,9 @@ class SemanticAnalyzer{
                     case NODE_TYPE::VARIABLE_DECLARATION:
                         symbol = std::move(this->analyzeVariableDeclaration(*it));
                         if (localTable.hasSymbol(symbol)){
+                            std::cout << localTable << std::endl;
+                            std::cout << symbol << std::endl;
+                            std::cout << globalTable << std::endl;
                             throw std::invalid_argument("Variable redeclaration");
                         }
                         this->localTable.addSymbol(symbol);
@@ -317,28 +370,37 @@ class SemanticAnalyzer{
         void analyzeFunctionDeclaration(Node *node){
             Node *type = node->getChild(0);
             Node *identifier = node->getChild(1);
-            Node *parameterList = node->getChild(2);
-            Node *compoundStatement = node->getChild(3);
+            Node *parameterList;
+            Node *compoundStatement;
+            if (node->getChildrenLength() == 4){
+                parameterList = node->getChild(2);
+                compoundStatement = node->getChild(3);
+            }else{
+                parameterList = nullptr;
+                compoundStatement = node->getChild(2);
+            }
 
 
             ValueType valueType = this->analyzeType(type);
+
             String::string name = this->analyzeIdentifier(identifier);
             List::list<ValueType> parameters;
 
             this->localTable = std::move(symbolTable(&this->globalTable));
-            for (auto it = parameterList->begin(); it != parameterList->end(); it++){
-                ValueType v = this->analyzeType((*it)->getChild(0));
-                parameters.push_back(v);
-                String::string n = std::move(this->analyzeIdentifier((*it)->getChild(1)));
-                Symbol symbol(SymbolType::VARIABLE, n, v);
-
-                localTable.addSymbol(symbol);
+            if (parameterList != nullptr){
+                for (auto it = parameterList->begin(); it != parameterList->end(); it++){
+                    ValueType v = this->analyzeType((*it)->getChild(0));
+                    parameters.push_back(v);
+                    String::string n = std::move(this->analyzeIdentifier((*it)->getChild(1)));
+                    Symbol symbol(SymbolType::VARIABLE, v, n);
+                    localTable.addSymbol(symbol);
+                } 
             }
             std::cout << localTable << std::endl;
-            Symbol symbol(SymbolType::FUNCTION, name, valueType, parameters);
-            std::cout << symbol << std::endl;
+            Symbol symbol(SymbolType::FUNCTION, valueType, name, parameters);
             this->globalTable.addSymbol(symbol);
             this->analyzeCompoundStatement(compoundStatement);
+            std::cout << localTable << std::endl << std::endl;
             return;
         }
         
@@ -360,7 +422,7 @@ int main(){
         return 1;
     }
     size_t size = getFileSize(inputFile);
-    String::string code(size);
+    String::string code("", 0, size);
     char ch;
     while (inputFile.get(ch)){
         code.push_back(ch);
@@ -370,7 +432,7 @@ int main(){
 
     Parser p(std::move(tokenLizer(code)));
     Node *node = p.parse();
-    
+    std::cout << node << std::endl;
     // std::ofstream outputFile("output/ast.json");
     // if (!outputFile.is_open()) {
     //     std::cerr << "无法打开输出文件" << std::endl;

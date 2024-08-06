@@ -5,6 +5,9 @@ int add(int a, int b){
 int mul(int a, int b){
     return a * b;
 }
+void* malloc(int size){
+    return 0;
+}
 char* stradd(char *a, char *b){
     int alen = 0;
     int blen = 0;

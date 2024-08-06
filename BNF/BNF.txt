@@ -11,10 +11,11 @@
 
 <init_declarator> ::= <identifier> "=" <expression>
                 | <identifier> "[" <constant>? "]" "=" <string>
-                | <identifier> "[" <constant> "]" "=" <expression_list>
+                | <identifier> "[" <constant> "]" "=" "{"  <expression_list> "}"
 
 
-<expression_list> ::= "{" <expression> "}"
+<expression_list> ::= <assignment_expression> |
+                    <assignment_expression> "," <expression_list>
 
 <type-specifier> ::= <type> | <pointer> <type>
 

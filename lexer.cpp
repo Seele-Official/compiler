@@ -1,7 +1,7 @@
 #include<iostream>
 #include<fstream>
 
-#include"lib/String.h"
+#include"lib/String.hpp"
 #include"lib/List.h"
 
 
@@ -209,7 +209,7 @@ class TOKEN{
 
 List::list<TOKEN> tokenLizer(const String::string &code){
     List::list<TOKEN> tokens;
-    String::string tempStr((size_t)100);
+    String::string tempStr("", 0, 100);
     for (size_t i = 0; i < code.getLength(); i++) {
         if (code[i] == ' ' || code[i] == '\n' || code[i] == '\t') {
             if (tempStr.isEmpty() == false) {
